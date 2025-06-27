@@ -60,7 +60,7 @@ async function fetchPreviousDiffs(filename) {
 
   const recentMerged = pulls.filter(pr => pr.merged_at && pr.number !== Number(pullRequestNumber));
 
-  const matchingDiffs = [];
+  const matchingSummaries = [];
 
   for (const pr of recentMerged) {
     const { data: changedFiles } = await octokit.pulls.listFiles({
@@ -71,17 +71,17 @@ async function fetchPreviousDiffs(filename) {
 
     const match = changedFiles.find(file => file.filename === filename);
     if (match && match.patch) {
-      matchingDiffs.push({
+      matchingSummaries.push({
         number: pr.number,
         user: pr.user.login,
         patch: match.patch,
       });
     }
 
-    if (matchingDiffs.length >= 3) break;
+    if (matchingSummaries.length >= 3) break;
   }
 
-  return matchingDiffs;
+  return matchingSummaries;
 }
 
 async function getGeminiReview(fileSummaries, author, title, numFilesChanged, commentBlock) {
@@ -95,15 +95,16 @@ Write a structured, paragraph-style review using GitHub-flavored markdown with t
 **Author**: ${author}  
 **Total Files Changed**: ${numFilesChanged}
 
-For each file:
+For each file, structure the review in the following order:
 
 ### File: \`<filename>\`
 
 - Code Summary: Describe the key code changes in that file.
 - Comment Summary: If any PR-level comments are related to this file, summarize them and include the commenter names.
+- Previous PR Summary: Summarize past PR changes on this file, if available. Mention PR number and contributor.
 - Recommendations: Suggest improvements or flag concerns if needed.
 
-When applicable, compare current changes with patterns from past pull requests that modified the same file and infer improvements based on history.
+Use paragraph format for each section and write professionally.
 
 ${fileSummaries}
 
@@ -166,11 +167,11 @@ async function postReviewComment(review) {
 
   for (const file of filteredFiles) {
     const prevDiffs = await fetchPreviousDiffs(file.filename);
-    const historyBlock = prevDiffs.length
+    const historicalSummary = prevDiffs.length
       ? prevDiffs.map(p => `From PR #${p.number} by @${p.user}:\n\`\`\`diff\n${p.patch}\n\`\`\``).join('\n\n')
       : 'No similar historical changes found.';
 
-    fileSummaries += `### File: \`${file.filename}\`\n\n\`\`\`diff\n${file.patch || ''}\n\`\`\`\n\n**Historical Changes**:\n${historyBlock}\n\n`;
+    fileSummaries += `### File: \`${file.filename}\`\n\n\`\`\`diff\n${file.patch || ''}\n\`\`\`\n\n**Previous PR Summary**:\n${historicalSummary}\n\n`;
   }
 
   const numFilesChanged = filteredFiles.length;
