@@ -97,7 +97,7 @@ Write a structured, paragraph-style review using GitHub-flavored markdown with t
 
 For each file, structure the review in the following order:
 
-### **File: `<filename>`**
+### **File: \`${file.filename}\`**
 
 - Code Summary: Describe the key code changes in that file.
 - Comment Summary: If any PR-level comments are related to this file, summarize them and include the commenter names.
