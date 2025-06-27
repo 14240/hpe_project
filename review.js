@@ -141,7 +141,7 @@ async function postReviewComment(review) {
       owner,
       repo,
       issue_number: pullRequestNumber,
-      body: `## Gemini AI Review Report\n\n${review}`,
+      body: `##LLVM KNOWLEDGE MINER - Review\n\n${review}`,
     });
     console.log('Review posted successfully.');
   } catch (error) {
