@@ -1,7 +1,8 @@
 #include <iostream>
 
 int main() {
-    std::cout<<"Hello, world!";
+    // Sample code here
+    std::cout<<"Hello, world!"<<Std::endl;
     // TODO: Add the required feature here
     return 0;
 }
