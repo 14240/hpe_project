@@ -13,16 +13,19 @@ const octokit = new Octokit({
 const geminiApiKey = process.env.GEMINI_API_KEY;
 const geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
+// Fetch PR metadata, comments, and file diffs
 async function getPullRequestData() {
   try {
     const { data: pr } = await octokit.pulls.get({ owner, repo, pull_number: pullRequestNumber });
 
+    // PR-level (issue) comments
     const { data: issueComments } = await octokit.issues.listComments({
       owner,
       repo,
       issue_number: pullRequestNumber,
     });
 
+    // Inline review comments (must be submitted via Review)
     const { data: reviewComments } = await octokit.pulls.listReviewComments({
       owner,
       repo,
@@ -44,12 +47,14 @@ async function getPullRequestData() {
   }
 }
 
+// Format inline review comments per file
 function formatInlineCommentsPerFile(reviewComments, filename) {
   const fileComments = reviewComments.filter(c => c.path === filename);
   if (!fileComments.length) return 'No public PR comments on this file.';
   return fileComments.map(c => `- **${c.user.login}**: ${c.body}`).join('\n');
 }
 
+// Fetch up to 3 historical patches that touched the same file
 async function fetchPreviousDiffs(filename) {
   const { data: pulls } = await octokit.pulls.list({
     owner,
@@ -83,6 +88,7 @@ async function fetchPreviousDiffs(filename) {
   return matchingSummaries;
 }
 
+// Build the Gemini prompt
 async function getGeminiReview(fileSummaries, author, title, numFilesChanged, globalCommentBlock) {
   const prompt = `You are a senior software engineer helping review a GitHub Pull Request.
 
@@ -134,6 +140,7 @@ ${globalCommentBlock}`;
   }
 }
 
+// Post the Gemini response as a review comment
 async function postReviewComment(review) {
   try {
     await octokit.issues.createComment({
@@ -149,6 +156,7 @@ async function postReviewComment(review) {
   }
 }
 
+// Main
 (async () => {
   const { author, title, issueComments, reviewComments, files } = await getPullRequestData();
 
@@ -175,7 +183,7 @@ async function postReviewComment(review) {
     fileSummaries += `### File: \`${file.filename}\`\n\n` +
       `\`\`\`diff\n${file.patch || ''}\n\`\`\`\n\n` +
       `**Comment Summary:**\n${fileComments}\n\n` +
-      `**Previous PR Summary**:\n${historicalSummary}\n\n`;
+      `**Previous PR Summary:**\n${historicalSummary}\n\n`;
   }
 
   const numFilesChanged = filteredFiles.length;
