@@ -1,8 +1,13 @@
-name: Gemini PR Review
+name: LLVM Knowledge Miner - Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types:
+      - opened
+      - synchronize
+      - edited
+      - reopened
+      - ready_for_review
 
 permissions:
   contents: read
