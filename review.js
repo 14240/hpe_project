@@ -97,7 +97,7 @@ Write a structured, paragraph-style review using GitHub-flavored markdown with t
 
 For each file, structure the review in the following order:
 
-### File: \`<filename>\`
+### **File: \`<filename>\`**
 
 - Code Summary: Describe the key code changes in that file.
 - Comment Summary: If any PR-level comments are related to this file, summarize them and include the commenter names.
@@ -141,7 +141,7 @@ async function postReviewComment(review) {
       owner,
       repo,
       issue_number: pullRequestNumber,
-      body: `##LLVM KNOWLEDGE MINER - Review\n\n${review}`,
+      body: `### **LLVM KNOWLEDGE MINER - Review**\n\n${review}`, // ✅ Corrected line for h3 format
     });
     console.log('Review posted successfully.');
   } catch (error) {
