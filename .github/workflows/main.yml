@@ -2,7 +2,9 @@ name: LLVM Knowledge Miner - Review
 
 on:
   pull_request:
-    types: [opened, synchronize, edited, reopened, ready_for_review]
+    types: [opened, synchronize, edited]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -11,6 +13,7 @@ permissions:
 
 jobs:
   review:
+    if: github.event.issue.pull_request || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
