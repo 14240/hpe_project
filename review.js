@@ -15,28 +15,15 @@ const geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/
 
 async function getPullRequestData() {
   try {
-    const { data: pr } = await octokit.pulls.get({
-      owner,
-      repo,
-      pull_number: pullRequestNumber,
-    });
-
-    const { data: comments } = await octokit.issues.listComments({
-      owner,
-      repo,
-      issue_number: pullRequestNumber,
-    });
-
-    const { data: files } = await octokit.pulls.listFiles({
-      owner,
-      repo,
-      pull_number: pullRequestNumber,
-    });
+    const { data: pr } = await octokit.pulls.get({ owner, repo, pull_number: pullRequestNumber });
+    const { data: comments } = await octokit.issues.listComments({ owner, repo, issue_number: pullRequestNumber });
+    const { data: reviews } = await octokit.pulls.listReviews({ owner, repo, pull_number: pullRequestNumber });
+    const { data: files } = await octokit.pulls.listFiles({ owner, repo, pull_number: pullRequestNumber });
 
     return {
       author: pr.user.login,
       title: pr.title,
-      comments,
+      comments: comments.concat(reviews),
       files,
     };
   } catch (error) {
@@ -47,7 +34,7 @@ async function getPullRequestData() {
 
 function formatPRComments(comments) {
   if (!comments.length) return 'No public PR comments.';
-  return comments.map(c => `**${c.user.login}**: ${c.body}`).join('\n\n');
+  return comments.map(c => `**${c.user?.login || 'Anonymous'}**: ${c.body}`).join('\n\n');
 }
 
 async function fetchPreviousDiffs(filename) {
@@ -141,7 +128,7 @@ async function postReviewComment(review) {
       owner,
       repo,
       issue_number: pullRequestNumber,
-      body: `### **LLVM KNOWLEDGE MINER - Review**\n\n${review}`, // ✅ Corrected line for h3 format
+      body: `### **LLVM KNOWLEDGE MINER - Review**\n\n${review}`,
     });
     console.log('Review posted successfully.');
   } catch (error) {
