@@ -2,5 +2,5 @@
 // for i386 and x86_64 archs on Linux.
 #include <stdlib.h>
 int main(){
-  printf("Hello");
+  printf("Hello da yashwanth");
 }
